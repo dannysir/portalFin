@@ -21,6 +21,7 @@ function uploadImage() {
     }).then(data => {
         if (data.ok){
             alert('success');
+            window.location.reload();
         }else{
             alert('fail');
         }

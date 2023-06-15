@@ -225,41 +225,59 @@ function removeAllChildNods(el) {
     }
 }
 
+let picIndex = 0;
+let dataleng;
+let position;
+
+function fetchImages() {
+    const url = `http://localhost:8080/api/user/images?latitude=${position.La}&longtitude=${position.Ma}`;
+    return fetch(url)
+        .then((response) => response.json());
+}
+
+function renderDisplay(data) {
+    const image = data[picIndex];
+    dataleng = data.length;
+    const content = `
+    <div class="overlaybox">
+      <form method="post" enctype="multipart/form-data">
+        <div class="button">
+          <label for="chooseFile">👉 CLICK HERE! 👈</label>
+        </div>
+        <input type="file" id="chooseFile" name="chooseFile" accept="image/*" onChange="loadFile(this)">
+        <div class="fileContainer">
+          <div class="fileInput">
+            <p>FILE NAME: </p>
+            <p id="fileName"></p>
+          </div>
+          <div class="buttonContainer">
+            <div onclick="uploadImage()" class="submitButton" id="submitButton">SUBMIT</div>
+          </div>
+        </div>
+      </form>
+      <div class="latlng" id="${position.La}">${position.Ma}</div>
+      <div class="bodycontainer" id="(${position.La}${position.La}">
+        <i class="fa-solid fa-arrow-left"></i>
+        <div class="first">
+          <img src="${image}" class="class-image-recommend"/>
+          <div class="movietitle text"></div>
+        </div>
+        <i class="fa-solid fa-arrow-right" onclick="nextPic()"></i>
+      </div>
+    </div>`;
+    customOverlay.setContent(content);
+    customOverlay.setPosition(position);
+    customOverlay.setMap(map);
+}
+
+function nextPic() {
+    picIndex = (picIndex + 1) % dataleng;
+    fetchImages().then(renderDisplay);
+}
+
 function displayCustomwindow(marker) {
-    const position = marker.getPosition();
-    let picIndex = 0;
-    let dataleng;
-
-    function fetchJson({callback}) {
-        fetch(`http://localhost:8080/api/user/images?latitude=${position.La}&longtitude=${position.Ma}`)
-            .then((response) => response.json())
-            .then((json) => {
-                callback(json);
-            });
-    }
-
-    function renderDisplay(data) {
-        let image = data[picIndex];
-        dataleng = data.length;
-        var content = `<div class="overlaybox"><form method="post" encType="multipart/form-data"><div  class="button"><label for="chooseFile">👉 CLICK HERE! 👈</label></div><input type="file" id="chooseFile" name="chooseFile" accept="image/*" onChange="loadFile(this)"><div class="fileContainer"><div class="fileInput"><p>FILE NAME: </p><p id="fileName"></p></div><div class="buttonContainer"><div onclick=uploadImage() class="submitButton" id="submitButton">SUBMIT</div></div></div></form><div class = "latlng" id="${position.La}">${position.Ma}</div>><div class="bodycontainer" id="(${position.La}${position.La}"> <i class="fa-solid fa-arrow-left"></i>    <div class="first">  <img src="${image}" class="class-image-recommend"/>      <div class="movietitle text"></div>    </div><i class="fa-solid fa-arrow-right" onclick=nextPic()></i></div></div>`;
-        customOverlay.setContent(content);
-        customOverlay.setPosition(position);
-// 커스텀 오버레이를 지도에 표시합니다
-        customOverlay.setMap(map);
-    }
-
-    const nextPic = () => {
-        if (picIndex < dataleng) {
-            picIndex++;
-            fetchJson({callback: renderDisplay});
-
-        } else if (picIndex >= dataleng){
-            picIndex = 0;
-            fetchJson({callback: renderDisplay});
-        }
-    }
-
-    fetchJson({callback: renderDisplay});
+    position = marker.getPosition();
+    fetchImages().then(renderDisplay);
 }
 
 
