@@ -3,35 +3,45 @@ package kr.ac.jejunu.user.userdao3;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("api/fileupload")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
+@Service
 public class ImageController {
-    private static final String UPLOAD_DIR = "static/images/";
+    private final UserDao userDao;
+    private final ImageRepository imageRepository;
 
-    private ImageRepository imageRepository;
+    @GetMapping("/{id}")
+    public User get(@PathVariable Long id) {
+        return userDao.findById(id).get();
+    }
+
     @PostMapping("/upload")
-    public String upload(@RequestParam("file") MultipartFile file, HttpServletRequest request,
+    @CrossOrigin(origins = "http://localhost:5173/")
+    public String upload(@RequestParam("image") MultipartFile file, HttpServletRequest request,
                          @RequestParam("latitude") String lat,
                          @RequestParam("longtitude") String lnt) throws IOException {
-        File path = new File(request.getServletContext().getRealPath("/") + "/static/");
-//        path.mkdir();
-        FileOutputStream fileOutputStream = new FileOutputStream(path + file.getOriginalFilename());
+//        File path = new File(request.getServletContext().getRealPath("/") + "/static/");
+        String pathStr = Paths.get("").toAbsolutePath() + "/src/main/resources/static/";
+        File path = new File(pathStr);
+
+        FileOutputStream fileOutputStream = new FileOutputStream(path + File.separator + file.getOriginalFilename());
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
         bufferedOutputStream.write(file.getBytes());
         bufferedOutputStream.close();
-
 
         Image image = Image.builder()
                 .url("http://localhost:8080/" + file.getOriginalFilename())
@@ -39,8 +49,21 @@ public class ImageController {
                 .longtitude(lnt)
                 .build();
         imageRepository.save(image);
+
         return "http://localhost:8080/" + file.getOriginalFilename();
 
     }
 
+    @GetMapping("/images")
+    @CrossOrigin(origins = "http://localhost:5173/")
+    public Set<String> getAllimages(@RequestParam("latitude") String lat,
+                                    @RequestParam("longtitude") String lnt) {
+        System.out.println(lat + lnt);
+        List<Image> imgese = imageRepository.findAllByLatitudeAndLongtitude(lat, lnt);
+        System.out.println(imgese);
+
+        return imgese.stream()
+                .map(Image::getUrl)
+                .collect(Collectors.toSet());
+    }
 }
