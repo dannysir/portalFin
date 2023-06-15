@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: s26977962
+    url: jdbc:mysql://localhost:3306/jeju
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  servlet:
+    multipart:
+      max-request-size: 1000MB
+      max-file-size: 1000MB
+

@@ -1,0 +1,486 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>키워드로 장소검색하고 목록으로 표출하기</title>
+    <script src="https://kit.fontawesome.com/bc0730ab1f.js" crossorigin="anonymous"></script>
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.25);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal .body {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal .body .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+
+        .modal .body .content {
+            width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .map_wrap, .map_wrap * {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        .map_wrap a, .map_wrap a:hover, .map_wrap a:active {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .map_wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #menu_wrap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            margin: 10px 0 30px 10px;
+            padding: 5px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 1;
+            font-size: 12px;
+            border-radius: 10px;
+        }
+
+        .bg_white {
+            background: #fff;
+        }
+
+        #menu_wrap hr {
+            display: block;
+            height: 1px;
+            border: 0;
+            border-top: 2px solid #5F5F5F;
+            margin: 3px 0;
+        }
+
+        #menu_wrap .option {
+            text-align: center;
+        }
+
+        #menu_wrap .option p {
+            margin: 10px 0;
+        }
+
+        #menu_wrap .option button {
+            margin-left: 5px;
+        }
+
+        #placesList li {
+            list-style: none;
+        }
+
+        #placesList .item {
+            position: relative;
+            border-bottom: 1px solid #888;
+            overflow: hidden;
+            cursor: pointer;
+            min-height: 65px;
+        }
+
+        #placesList .item span {
+            display: block;
+            margin-top: 4px;
+        }
+
+        #placesList .item h5, #placesList .item .info {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        #placesList .item .info {
+            padding: 10px 0 10px 55px;
+        }
+
+        #placesList .info .gray {
+            color: #8a8a8a;
+        }
+
+        #placesList .info .jibun {
+            padding-left: 26px;
+            background: url(https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/places_jibun.png) no-repeat;
+        }
+
+        #placesList .info .tel {
+            color: #009900;
+        }
+
+        #placesList .item .markerbg {
+            float: left;
+            position: absolute;
+            width: 36px;
+            height: 37px;
+            margin: 10px 0 0 10px;
+            background: url(https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_number_blue.png) no-repeat;
+        }
+
+        #placesList .item .marker_1 {
+            background-position: 0 -10px;
+        }
+
+        #placesList .item .marker_2 {
+            background-position: 0 -56px;
+        }
+
+        #placesList .item .marker_3 {
+            background-position: 0 -102px
+        }
+
+        #placesList .item .marker_4 {
+            background-position: 0 -148px;
+        }
+
+        #placesList .item .marker_5 {
+            background-position: 0 -194px;
+        }
+
+        #placesList .item .marker_6 {
+            background-position: 0 -240px;
+        }
+
+        #placesList .item .marker_7 {
+            background-position: 0 -286px;
+        }
+
+        #placesList .item .marker_8 {
+            background-position: 0 -332px;
+        }
+
+        #placesList .item .marker_9 {
+            background-position: 0 -378px;
+        }
+
+        #placesList .item .marker_10 {
+            background-position: 0 -423px;
+        }
+
+        #placesList .item .marker_11 {
+            background-position: 0 -470px;
+        }
+
+        #placesList .item .marker_12 {
+            background-position: 0 -516px;
+        }
+
+        #placesList .item .marker_13 {
+            background-position: 0 -562px;
+        }
+
+        #placesList .item .marker_14 {
+            background-position: 0 -608px;
+        }
+
+        #placesList .item .marker_15 {
+            background-position: 0 -654px;
+        }
+
+        #pagination {
+            margin: 10px auto;
+            text-align: center;
+        }
+
+        #pagination a {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        #pagination .on {
+            font-weight: bold;
+            cursor: default;
+            color: #777;
+        }
+
+        .wrap {
+            position: absolute;
+            left: 0;
+            bottom: 40px;
+            width: 288px;
+            height: 132px;
+            margin-left: -144px;
+            text-align: left;
+            overflow: hidden;
+            font-size: 12px;
+            font-family: 'Malgun Gothic', dotum, '돋움', sans-serif;
+            line-height: 1.5;
+        }
+
+        .wrap * {
+            padding: 0;
+            margin: 0;
+        }
+
+        .wrap .info {
+            width: 286px;
+            height: 120px;
+            border-radius: 5px;
+            border-bottom: 2px solid #ccc;
+            border-right: 1px solid #ccc;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .wrap .info:nth-child(1) {
+            border: 0;
+            box-shadow: 0px 1px 2px #888;
+        }
+
+        .info .title {
+            padding: 5px 0 0 10px;
+            height: 30px;
+            background: #eee;
+            border-bottom: 1px solid #ddd;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .info .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #888;
+            width: 17px;
+            height: 17px;
+            background: url('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/overlay_close.png');
+        }
+
+        .info .close:hover {
+            cursor: pointer;
+        }
+
+        .info .body {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info .desc {
+            position: relative;
+            margin: 13px 0 0 90px;
+            height: 75px;
+        }
+
+        .desc .ellipsis {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .desc .jibun {
+            font-size: 11px;
+            color: #888;
+            margin-top: -2px;
+        }
+
+        .info .img {
+            position: absolute;
+            top: 6px;
+            left: 5px;
+            width: 73px;
+            height: 71px;
+            border: 1px solid #ddd;
+            color: #888;
+            overflow: hidden;
+        }
+
+        .info:after {
+            content: '';
+            position: absolute;
+            margin-left: -12px;
+            left: 50%;
+            bottom: 0;
+            width: 22px;
+            height: 12px;
+            background: url('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/vertex_white.png')
+        }
+
+        .info .link {
+            color: #5085BB;
+        }
+
+        .overlaybox {
+            position: relative;
+            width: 360px;
+            height: 500px;
+            background-color: #CACACA;
+        }
+
+        .overlaybox div, ul {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .overlaybox li {
+            list-style: none;
+        }
+
+        .overlaybox .boxtitle {
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            background: url('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/arrow_white.png') no-repeat right 120px center;
+            margin-bottom: 8px;
+        }
+
+        .overlaybox .leftarrow {
+            width: 20px;
+            height: 50px;
+            background: url('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/arrow_white.png') no-repeat center;
+            margin-bottom: 8px;
+        }
+
+        .overlaybox .first {
+            position: relative;
+            width: 80%;
+            height: 80%;
+            margin: 8px;
+        }
+
+        .class-image-recommend{
+            width: max-content;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            /* width를 max-width로 바꾸고 height 를 없애면 이미지도 안깨짐*/
+
+        }
+
+
+        .bodycontainer {
+            width: 100%;
+            height: 90%;
+            display: flex;
+            align-items: center;
+        }
+
+        .fa-arrow-left {
+            font-size: 2rem;
+            color: #ffffff;
+            cursor: pointer;
+            margin: 8px;
+        }
+
+        .fa-arrow-right {
+            font-size: 2rem;
+            color: #ffffff;
+            cursor: pointer;
+            margin: 8px;
+        }
+
+        .button {
+            display: flex;
+            justify-content: center;
+        }
+
+        label {
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .latlng{
+            display: none;
+        }
+        #chooseFile {
+            visibility: hidden;
+        }
+        .fileContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fileInput {
+            display: flex;
+            align-items: center;
+            border-bottom: solid 2px black;
+            width: 60%;
+            height: 30px;
+        }
+
+        #fileName {
+            margin-left: 5px;
+        }
+
+        .buttonContainer {
+            width: 15%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 10px;
+            background-color: black;
+            color: white;
+            border-radius: 30px;
+            padding: 10px;
+            font-size: 0.8em;
+
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="modal hidden">
+    <div class="body">
+        <div class="close">X</div>
+        <div class="content">안녕하세요</div>
+    </div>
+</div>
+<div class="map_wrap">
+    <div id="map" style="width:100%;height:100%;position:relative;overflow:hidden;"></div>
+    <div id="menu_wrap" class="bg_white">
+        <div class="option">
+            <div>
+                <form onsubmit="searchPlaces(); return false;">
+                    키워드 : <input type="text" value="이태원 맛집" id="keyword" size="15">
+                    <button type="submit">검색하기</button>
+                </form>
+            </div>
+        </div>
+
+        <hr>
+        <ul id="placesList"></ul>
+        <div id="pagination"></div>
+    </div>
+</div>
+
+<script type="text/javascript"
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=2da780435ea83adccc320b06a422003d&libraries=services,clusterer,drawing"></script>
+<script src="map.js"></script>
+<script src="upload.js"></script>
+</body>
+</html>
